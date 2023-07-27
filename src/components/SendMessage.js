@@ -64,7 +64,7 @@ const SendMessage = () =>{
 
     const sendMessageApi = () =>{
         var myHeaders = new Headers();
-        myHeaders.append("Authorization", "Bearer EAADy6KDpCygBO7gtxqxIuGPPlLaPZBHy6uk0WBZBxZCqt7E5vEliHrlQa8twMNeMxRZBcrL2D5Fh73EoBaXQRQFHHt0l5nljijg406n0p4NnenhoAckHB1CaJbZAR8BGESQMdmGJZCJkpzAp5o304AyGeQCFk9LiAqQoZAFNAHo149F8cCF7eNAtvfkELb6dmcCOXSG4CZAoVANqZCuGw0QOrSSgg8YyAwLesDM4ZD");
+        myHeaders.append("Authorization", "");
 
         var formdata = new FormData();
         formdata.append("messaging_product", "whatsapp");
@@ -72,6 +72,7 @@ const SendMessage = () =>{
         formdata.append("type", "template");
         formdata.append("template", "{ \"name\": \"hello_world\",\"language\":\n{ \"code\": \"en_US\" }}");
 
+        var fromwanum = "";
         var requestOptions = {
             method: 'POST',
             headers: myHeaders,
@@ -79,7 +80,7 @@ const SendMessage = () =>{
             redirect: 'follow'
         };
 
-        fetch("https://graph.facebook.com/v17.0/100652643117006/messages", requestOptions)
+        fetch("https://graph.facebook.com/v17.0/"+fromwanum+"/messages", requestOptions)
             .then(response => {
                 if (!response.ok) {
                     // If the response status is not in the 2xx range, handle the error
