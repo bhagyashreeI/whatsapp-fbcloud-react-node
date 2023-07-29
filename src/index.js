@@ -12,13 +12,24 @@ import SendBulkMessage from './components/SendBulkMessage';
 
 import { createBrowserRouter,RouterProvider,Outlet } from 'react-router-dom';
 import SubNav from './components/layout/SubNav';
+import Sidebar from './components/layout/Sidebar';
+import Chat from './components/Chat';
+import Footer from './components/layout/Footer';
 
 const AppLayout = () =>{
   return (
     <>
       <Header/>
-      <SubNav/>
-      <Outlet/>
+      <div className="sub-page-wrapper">
+        <Sidebar/>
+        
+        <div className="sub-page-wrapper-content">
+          <Outlet/>
+          
+        </div>
+        <Footer/>
+      </div>
+      
     </>
   )
 }
@@ -43,6 +54,10 @@ const routerConfig = createBrowserRouter([
       {
         path:"/send-bulk-message",
         element: <SendBulkMessage />
+      },
+      {
+        path:"/wa-chat",
+        element: <Chat />
       }
     ],
     errorElement: <ErrorBoundary />

@@ -64,7 +64,7 @@ const Header = () => {
                 <a className="dropdown-item" href="#">Settings</a>
               </li>
               <li>
-                <a className="dropdown-item" href="#">Logout <i class="fa fa-home" aria-hidden="true"></i>
+                <a className="dropdown-item" href="#">Logout <i className="fa fa-home" aria-hidden="true"></i>
                 </a>
               </li>
             </ul>

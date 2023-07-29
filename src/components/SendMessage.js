@@ -22,7 +22,9 @@ const SendMessage = () =>{
     const [messageEmptyError, setMessageEmptyError] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
     const [status, setStatus] = useState(false);
-
+    
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
     const [formData, setFormData] = useState({
         mobileNumber: "",
         message: "",
@@ -35,13 +37,49 @@ const SendMessage = () =>{
         setFormData({
             ...formData, [e.target.name]: e.target.value
         })
+        
+            
+    }
+    const inputNumberHandler = (e) =>{
+        setFormData({
+            ...formData, ['mobileNumber']: e.target.value
+        })
+        fetch(API_URL + 'api/search/contacts?q=' + e.target.value)
+        .then((res) => res.json())
+            .then((resdata)=>{
+                
+                setSuggestions(resdata);
+                setShowSuggestions(true)
+        })
+            
+    }
+
+    const handleSuggestionClick = (ev) => {
+        setFormData({
+            ...formData, ['mobileNumber']: ev.mobilenumber
+        })
+        setSuggestions([])
+        setShowSuggestions(false)
     }
 
 
-   
+   const postMsgData = async (requestOptions) =>{
+        const msgResData = await fetch(API_URL + 'api/create', requestOptions);
+        const jsonMsgData = await msgResData.json();
+        if(!msgResData.ok) {
+            setErrorMessage(jsonMsgData.message);
+            setTimeout(() => setErrorMessage(""), 3000);
+        } else {
+            setStatus(true)
+                setFormData({
+                    mobileNumber: "",
+                    message: "",
+                })
+                setTimeout(() => setStatus(false), 3000);
+        }
+    }
 
-    const storeMsg = (msgObj) => {
-        console.log("msgObj", msgObj)
+    const sendMsg = (msgObj) => {
 
         const requestOptions = {
             method: 'POST',
@@ -50,63 +88,17 @@ const SendMessage = () =>{
             },
             body: JSON.stringify(msgObj),
         };
-
-        const data = fetch(API_URL + 'api/create', requestOptions).then((res) => res.json())
-            .then((resdata) => {
-                setStatus(true)
-                setFormData({
-                    mobileNumber: "",
-                    message: "",
-                })
-                setTimeout(() => setStatus(false), 3000);
-            });
+        postMsgData(requestOptions)
     }
 
     const sendMessageApi = () =>{
-        var myHeaders = new Headers();
-        myHeaders.append("Authorization", "");
-
-        var formdata = new FormData();
-        formdata.append("messaging_product", "whatsapp");
-        formdata.append("to", mobileNumber);
-        formdata.append("type", "template");
-        formdata.append("template", "{ \"name\": \"hello_world\",\"language\":\n{ \"code\": \"en_US\" }}");
-
-        var fromwanum = "";
-        var requestOptions = {
-            method: 'POST',
-            headers: myHeaders,
-            body: formdata,
-            redirect: 'follow'
-        };
-
-        fetch("https://graph.facebook.com/v17.0/"+fromwanum+"/messages", requestOptions)
-            .then(response => {
-                if (!response.ok) {
-                    // If the response status is not in the 2xx range, handle the error
-                    return response.json().then(data => {
-                        throw new Error(data.error.message);
-                    });
-                }
-                return response.json(); // Parse the successful response data
-            })
-            .then(data => {
-                // Handle successful response here
-                console.log("ttt",data);
-                const wa_id = data?.contacts[0]?.wa_id;
-                const wa_message = "hello_world";
-                const msgData = {
-                    wa_id: wa_id,
-                    message: wa_message,
-                    sent: true
-                }
-                storeMsg(msgData);
-            })
-            .catch(error => {
-                // Handle API error here
-                setErrorMessage(error.message); // Set the error message in state for display
-                console.error(error); // Log the error for further investigation
-            });
+        const msgData = {
+            mobileNumber: mobileNumber,
+            message: message,
+            type: 'template',
+            sent: true
+        }
+        sendMsg(msgData);
     }
 
     const submitHandler = (e) =>{
@@ -126,7 +118,7 @@ const SendMessage = () =>{
         <div className='communication mt-2 mb-2'>
 
             <div className="row">
-                <div className="col-3 mx-auto">
+                <div className="col-md-6 mx-auto">
                     <div className="text-center">
                         <div className='card mx-auto  p-2'>
                             <FormHeader title="Send Message" />
@@ -151,7 +143,7 @@ const SendMessage = () =>{
                                     placeholder='Mobile Number'
                                     name='mobileNumber'
                                     value={mobileNumber}
-                                    onChange={inputHandler}
+                                    onChange={inputHandler,inputNumberHandler}
                                     size='small'
                                     style={{
                                         margin: "1em 0em",
@@ -165,6 +157,19 @@ const SendMessage = () =>{
                                     required
                                 />
                                 
+                                    
+                                {showSuggestions && 
+                                <ul className={'list-unstyled border' + (showSuggestions ? "show" : "hide")}>
+                                    {suggestions.length > 0 && 
+                                        suggestions.map(s=>{
+                                            return(
+                                                <li className='border-bottom' key={s._id} onClick={() => handleSuggestionClick(s)}>{s.name}</li>
+                                            )
+                                        })
+                                }
+                                    
+                                </ul>
+                                }
                                 </div>
                             <div className='message app' style={{ marginTop: "1.5em" }}>
                                 

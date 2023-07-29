@@ -35,7 +35,7 @@ const SendBulkMessage = () => {
     }
     return (
         <div className="row">
-            <div className="col-3 mx-auto">
+            <div className="col-md-6 mx-auto">
                 <div className="text-center">
                     <div className='card mx-auto  p-2'>
                         <FormHeader title="Send Bulk Message" />
