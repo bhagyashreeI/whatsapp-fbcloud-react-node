@@ -27,6 +27,9 @@ export const PersonChat = () => {
             <div className="line"></div>
             <div className="line"></div>
             <div className="line"></div>
+            <div className="line"></div>
+            <div className="line"></div>
+            <div className="line"></div>
             <div className="shimmer"></div>
         </div>
     )

@@ -12,10 +12,18 @@ const Chat = () => {
     const [contactlist,setContactlist] = useState([]);
     const [filteredContactlist,setFilteredContactlist] = useState([]);
     const [selectedPerson,setSelectedPerson] = useState([]);
+    const [errorMessage, setErrorMessage] = useState(null);
     const [formData, setFormData] = useState({
         mobileNumber: ""
     });
     const { mobileNumber } = formData;
+
+    const [formSendData, setSendFormData] = useState({
+        waid: "",
+        message:"",
+        cid:""
+    });
+    const { waid,message,cid } = formSendData;
     
 
     const fetchList = async() => {
@@ -23,7 +31,8 @@ const Chat = () => {
         const json = await data.json();
         setContactlist(json)
         setFilteredContactlist(json);
-        fetchPersonChat(json[0].mobilenumber);
+        fetchPersonChat(json[0]._id);
+        
     }
     const inputNumberHandler = (e) =>{
         setFormData({
@@ -38,13 +47,67 @@ const Chat = () => {
             
     }
 
-    const fetchPersonChat = async(waid) => {
-        alert(waid)
-        const data = await fetch(API_URL+"api/contact-chat?q=" + waid)
+    const fetchPersonChat = async(id) => {
+        const data = await fetch(API_URL + "api/get/contact?q=" + id)
         const json = await data.json();
-        setSelectedPerson(json[0])
+        console.log(json)
+        setSelectedPerson(json)
+        console.log("selectedPerson",selectedPerson)
+        setSendFormData({
+            
+                'waid':json.mobilenumber,
+                'cid':json._id
+        
+        })
+    }
+
+    const inputMesgHandler = (e) =>{
+        setSendFormData({
+            ...formSendData, ['message']: e.target.value
+        })
+    }
+
+    
+   const postMsgData = async (requestOptions) =>{
+        const msgResData = await fetch(API_URL + 'api/create', requestOptions);
+        const jsonMsgData = await msgResData.json();
+        if(!msgResData.ok) {    
+            setErrorMessage(jsonMsgData.message);
+            setTimeout(() => setErrorMessage(""), 3000);
+        } else {
+            setSendFormData({
+            ...formSendData, ['message']: ''
+            })
+        }
+    }
+
+    const sendMsg = (msgObj) => {
+
+        const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Set the Content-Type header to JSON
+            },
+            body: JSON.stringify(msgObj),
+        };
+        postMsgData(requestOptions)
+    }
+
+    const sendMessageApi = () =>{
+        const msgData = {
+            mobileNumber: waid,
+            message: message,
+            type: 'text',
+            sent: true
+        }
+        sendMsg(msgData);
     }
     
+    const handleSendMsgClick = () => {
+        sendMessageApi();
+        setTimeout(() => fetchPersonChat(cid), 3000);
+        
+    }
 
     useEffect(()=>{
         fetchList()
@@ -91,9 +154,9 @@ const Chat = () => {
                                 {filteredContactlist.length > 0 && 
                                     filteredContactlist.map((c,index)=>{
                                         return (
-                                        <li key={c._id} className={"person " +(index === 0 ? "active-user" : " ")
+                                        <li key={c._id} className={"person " +(c._id === selectedPerson._id ? "active-user" : " ")
                                                 } data-chat={"person+${index}"} onClick={()=>
-                                                    fetchPersonChat(c.mobilenumber)
+                                                    fetchPersonChat(c._id)
                                                 }>
                                             <div className="user">
                                                 <img src={noimage} alt={c.name}/>
@@ -110,36 +173,48 @@ const Chat = () => {
                             </div>
                         </div>
                         <div className="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9">
-                            <div className="selected-user">
-                                <span>To: <span className="name"></span></span>
+                                    {selectedPerson.length === 0 &&
+                                        <PersonChat />
+                                    }
+                                    {selectedPerson.length !=0 &&
+                            <><div className="selected-user">
+                                        <span>To: <span className="name">{selectedPerson.name}</span></span>
                             </div>
                             <div className="chat-container">
                                 <ul className="chat-box chatContainerScroll">
-                                   
-                                    <li className="chat-right ">
-                                        <div className="chat-hour">08:56 <span className="fa fa-check-circle"></span></div>
-                                        <div className="chat-text bg-lightgreen">Hi, 
-                                             Welcome to Payripe.</div>
+                                            {selectedPerson.messages && selectedPerson.messages.map((chat) => {
+                                                return (
+
+                                                    
+                                                    <li key={chat._id} className={" " + (chat.sentType == 'sent' ? "chat-right " : "chat-left")}>
+                                        <div className="chat-hour">{chat.createdAt} <span className="fa fa-check-circle"></span></div>
+                                                        <div className={
+                                                            "chat-text " +
+                                                            (chat.sentType == 'sent' ? "bg-lightgreen " : "")
+                                                        } >{chat.message}.</div>
                                         <div className="chat-avatar">
                                             <img src={noimage} alt="Retail Admin"/>
-                                            <div className="chat-name">You</div>
+                                                            <div className="chat-name">{chat.sentType == 'sent' ? 'You' : selectedPerson.name}</div>
                                         </div>
                                     </li>
-                                    <li className="chat-left">
-                                        <div className="chat-avatar">
-                                            <img src={noimage} alt="Retail Admin"/>
-                                            <div className="chat-name">Bhagyashree Rahile</div>
-                                        </div>
-                                        <div className="chat-text">Hello Admin. Looking for merchant app for my business</div>
-                                        <div className="chat-hour">08:57 <span className="fa fa-check-circle"></span></div>
-                                    </li>
+                                    
+                                    )
+                                })
+                                            }
+                                    
 
                                 </ul>
                                 <div className="form-group mt-3 mb-2">
-                                    <textarea className="form-control" rows="3" placeholder="Type your message here..."></textarea>
+                                    <textarea className="form-control" rows="3" placeholder="Type your message here..." name='message'
+                                    value={message}
+                                    onChange={inputMesgHandler}></textarea>
                                 </div>
-                                <button type="button" className="btn btn-info btn-rounded float-right">Send</button>
+                                {errorMessage && <div className='text-danger'>Error: {errorMessage}</div>}
+                            
+                                <button type="button" className="btn btn-info btn-rounded float-right" onClick={handleSendMsgClick}>Send</button>
                             </div>
+                            </>
+                                        }
                         </div>
                     </div>
                 </div>
